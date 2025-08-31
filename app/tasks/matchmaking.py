@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from services.matching import MatchingService # noqa
 from services.notification import NotificationService # noqa
 from app.core.config import settings # noqa
-from app.core.celery import app # noqa
+from app.core.celeryconfig import app # noqa
 
 
 matching_service = MatchingService()

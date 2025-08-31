@@ -7,12 +7,9 @@ app = Celery(
     include=['tasks.matchmaking', 'tasks.notification']
 )
 
-app.config.update(
-    expire_result=3600,
-)
-
 # Настройки
 app.conf.update(
+    expire_result=3600,
     task_serializer='json',
     result_serializer='json',
     task_ignore_result=False,
