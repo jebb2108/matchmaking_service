@@ -4,8 +4,8 @@ app = Celery(
     'app.core.celeryconfig',
     broker='redis://localhost',
     backend='redis://localhost',
+    include=['app.tasks.matchmaking',],
     broker_connection_retry_on_startup=True,
-    include=['app.tasks.matchmaking',]
 )
 
 # Настройки

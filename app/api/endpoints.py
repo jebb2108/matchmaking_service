@@ -2,13 +2,12 @@ import sys
 
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from services.matching import MatchingService # noqa
-# from db.session import get_db # noqa
+
 
 router = APIRouter()
 
