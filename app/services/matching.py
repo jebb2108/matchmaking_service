@@ -1,0 +1,71 @@
+import sys
+import logging
+from datetime import datetime
+from redis import asyncio as aioredis
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from models.models import User # noqa
+from core.config import settings # noqa
+
+logger = logging.getLogger(__name__)
+
+
+class MatchingService:
+    def __init__(self):
+        self.redis = aioredis.from_url(settings.REDIS_URL)
+
+    async def add_to_queue(self, user_id: int, user_data: dict):
+        """Добавление пользователя в очередь поиска"""
+        # Сохраняем данные пользователя в Redis
+        await self.redis.hset(f"user:{user_id}", mapping=user_data)
+        # Добавляем в очередь поиска
+        await self.redis.lpush("waiting_queue", user_id)
+        # Устанавливаем флаг поиска
+        await self.redis.setex(f"searching:{user_id}", 300, "true")
+
+        logger.info(f"User {user_id} added to queue")
+
+    async def remove_from_queue(self, user_id: int):
+        """Удаление пользователя из очереди"""
+        await self.redis.lrem("waiting_queue", 1, user_id)
+        await self.redis.delete(f"searching:{user_id}")
+        logger.info(f"User {user_id} removed from queue")
+
+    async def find_match(self):
+        """Поиск пары пользователей"""
+        queue_length = await self.redis.llen("waiting_queue")
+
+        if queue_length >= 2:
+            # Достаем двух пользователей из очереди
+            user1_id = await self.redis.rpop("waiting_queue")
+            user2_id = await self.redis.rpop("waiting_queue")
+
+            if user1_id and user2_id:
+                user1_id = int(user1_id)
+                user2_id = int(user2_id)
+
+                # Создаем комнату чата
+                room_id = f"chat_{user1_id}_{user2_id}"
+
+                # Сохраняем информацию о комнате
+                room_data = {
+                    "user1_id": user1_id,
+                    "user2_id": user2_id,
+                    "created_at": datetime.now().isoformat()
+                }
+                await self.redis.hset(f"room:{room_id}", mapping=room_data)
+                await self.redis.expire(f"room:{room_id}", 3600)  # 1 час
+
+                # Удаляем флаги поиска
+                await self.redis.delete(f"searching:{user1_id}")
+                await self.redis.delete(f"searching:{user2_id}")
+
+                logger.info(f"Match found: {user1_id} and {user2_id}, room: {room_id}")
+
+                return room_id, user1_id, user2_id
+
+        return None, None, None
