@@ -1,10 +1,11 @@
 from celery import Celery
 
 app = Celery(
-    'celery',
+    'app.core.celeryconfig',
     broker='redis://localhost',
     backend='redis://localhost',
-    include=['tasks.matchmaking', 'tasks.notification']
+    broker_connection_retry_on_startup=True,
+    include=['app.tasks.matchmaking',]
 )
 
 # Настройки
@@ -16,6 +17,4 @@ app.conf.update(
     task_track_started=True,
 )
 
-if __name__ == '__main__':
-    app.start()
 

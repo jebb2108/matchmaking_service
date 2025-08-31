@@ -1,15 +1,11 @@
 import sys
 import logging
 from datetime import datetime
+from uuid import uuid4
+
 from redis import asyncio as aioredis
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from models.models import User # noqa
-from core.config import settings # noqa
+from app.core.config import settings # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +45,7 @@ class MatchingService:
                 user2_id = int(user2_id)
 
                 # Создаем комнату чата
-                room_id = f"chat_{user1_id}_{user2_id}"
+                room_id = str(uuid4())
 
                 # Сохраняем информацию о комнате
                 room_data = {
