@@ -18,6 +18,8 @@ class MatchingService:
         """Добавление пользователя в очередь поиска"""
         # Сохраняем данные пользователя в Redis
         await self.redis.hset(f"user:{user_id}", mapping=user_data)
+        # Указываем TTL для этого пользователя
+        await self.redis.expire(f"user:{user_id}", 600, nx=True)
         # Добавляем в очередь поиска
         await self.redis.lpush("waiting_queue", user_id)
         # Устанавливаем флаг поиска
