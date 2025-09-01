@@ -41,6 +41,8 @@ class MatchingService:
             # Достаем двух пользователей из очереди
             user1_id = await self.redis.rpop("waiting_queue")
             user2_id = await self.redis.rpop("waiting_queue")
+            user1_data = await self.redis.hgetall(f"user:{user1_id}")
+            user2_data = await self.redis.hgetall(f"user:{user2_id}")
 
             if user1_id and user2_id:
                 user1_id = int(user1_id)
